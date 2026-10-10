@@ -1,4 +1,4 @@
-```yaml
+
 name: Build HeartBar mod
 
 on:
@@ -44,4 +44,3 @@ jobs:
           path: '**/build/libs/*.jar'
           if-no-files-found: error
           retention-days: 14
-```
