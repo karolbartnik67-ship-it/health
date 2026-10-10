@@ -1,27 +1,28 @@
 ```yaml
 name: Build HeartBar mod
 
-on:
+'on':
   workflow_dispatch:
   push:
-    branches: ["main", "master"]
+    branches:
+      - main
+      - master
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Pobierz kod
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ustaw Java 21
+      - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: '21'
 
-      - name: Znajdź projekt moda
+      - name: Find project
         id: project
         shell: bash
         run: |
@@ -35,21 +36,19 @@ jobs:
                 break
               fi
             done
-
             if [ -z "$found" ]; then
-              echo "Nie znaleziono plików Gradle projektu."
+              echo "Nie znaleziono plikow Gradle."
               ls -la
               exit 1
             fi
-
             echo "dir=$found" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Zbuduj moda
+      - name: Build mod
         working-directory: ${{ steps.project.outputs.dir }}
         run: gradle --no-daemon build
 
-      - name: Udostępnij pliki JAR
+      - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: HeartBar-Fabric-1.21.4
