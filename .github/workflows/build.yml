@@ -1,37 +1,59 @@
+```yaml
 name: Build HeartBar mod
 
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Pobierz kod
         uses: actions/checkout@v4
 
       - name: Ustaw Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
 
-      - name: Ustaw Gradle 8.10.2
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.10.2"
+      - name: Znajdź projekt moda
+        id: project
+        shell: bash
+        run: |
+          if [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+            echo "dir=." >> "$GITHUB_OUTPUT"
+          else
+            found=""
+            for file in */settings.gradle */settings.gradle.kts */build.gradle */build.gradle.kts; do
+              if [ -f "$file" ]; then
+                found="${file%/*}"
+                break
+              fi
+            done
+
+            if [ -z "$found" ]; then
+              echo "Nie znaleziono plików Gradle projektu."
+              ls -la
+              exit 1
+            fi
+
+            echo "dir=$found" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Zbuduj moda
-        working-directory: heartbar-fabric-1.21.4
+        working-directory: ${{ steps.project.outputs.dir }}
         run: gradle --no-daemon build
 
       - name: Udostępnij pliki JAR
         uses: actions/upload-artifact@v4
         with:
           name: HeartBar-Fabric-1.21.4
-          path: heartbar-fabric-1.21.4/build/libs/*.jar
+          path: ${{ steps.project.outputs.dir }}/build/libs/*.jar
           if-no-files-found: error
           retention-days: 14
+```
